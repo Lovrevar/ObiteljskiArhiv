@@ -10,6 +10,7 @@ import { Stitch } from "@/components/Stitch";
 import { SEO, SITE_URL } from "@/components/SEO";
 import { COLLECTION_HANDLE, bookFacts, displayTitle, editionTone, familyMembers, splitEditionTitle } from "@/lib/book";
 import { formatPrice, shopifyImageUrl } from "@/lib/format";
+import { DISCOUNT_TIERS, getDiscountForQuantity } from "@/lib/shopify";
 import { cn } from "@/lib/utils";
 
 const accordionItems = [
@@ -68,6 +69,13 @@ export default function ProductPage() {
   const handleAddToCart = () => addBook(product, quantity);
   const [name, edition] = splitEditionTitle(product.node.title);
   const tone = editionTone(product.node.title);
+
+  // volume discount on single books, applied by Shopify in the cart
+  const unitPrice = variant ? parseFloat(variant.price.amount) : 0;
+  const volumeDiscount = getDiscountForQuantity(quantity).discount;
+  // Shopify takes the percentage off each book and drops fractions of a cent (29,99 € at 15% → 25,50 €)
+  const discountedUnitPrice = unitPrice - Math.floor(unitPrice * volumeDiscount + 1e-6) / 100;
+  const firstTier = DISCOUNT_TIERS.find((tier) => tier.discount > 0);
 
   // the Shopify description uses dashes and markdown asterisks; keep meta text plain
   const plainDescription = (product.node.description || "").replace(/\s+[–—]\s+/g, ", ").replace(/\*\*/g, "");
@@ -241,12 +249,26 @@ export default function ProductPage() {
                       </button>
                     </div>
                   )}
+                  {!isCollection && variant && volumeDiscount > 0 && (
+                    <p className="mt-4 flex flex-wrap items-baseline gap-x-2 font-sans text-[14px] text-ink" aria-live="polite">
+                      <span className="text-burgundy">-{volumeDiscount}% za {quantity} knjiga:</span>
+                      <span className="num-lining text-ink-soft line-through">{formatPrice(unitPrice * quantity, variant.price.currencyCode)}</span>
+                      <span className="num-lining font-medium">
+                        {formatPrice(discountedUnitPrice * quantity, variant.price.currencyCode)}
+                      </span>
+                    </p>
+                  )}
                   <p className="mt-4 font-sans text-[13px] leading-relaxed text-ink-soft">
                     {variant?.availableForSale
                       ? "Knjiga je dostupna za narudžbu. Trošak dostave prikazuje se pri plaćanju."
                       : "Ovo izdanje trenutno nije dostupno za kupnju."}{" "}
+                    {firstTier && (
+                      <>
+                        Za {firstTier.minQty} ili više knjiga u košarici, bilo kojeg izdanja, popust se obračunava automatski.{" "}
+                      </>
+                    )}
                     <Link to="/shop" className="text-ink underline decoration-burgundy/50 underline-offset-4 hover:decoration-burgundy">
-                      Za više knjiga složite kolekciju i ostvarite količinski popust.
+                      Pogledajte količinske popuste.
                     </Link>
                   </p>
                 </div>

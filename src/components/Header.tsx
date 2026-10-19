@@ -14,15 +14,11 @@ const navLinks = [
   { to: "/partners", label: "Partneri" },
 ];
 
-const announcements = [
-  "Knjige su stigle. Obiteljski Arhiv sada je dostupan za narudžbu.",
-  "Gradite obiteljsku kolekciju: 5+ knjiga 15% popusta, 10+ knjiga 20% popusta.",
-];
+const announcement = "Gradite obiteljsku kolekciju: 5+ knjiga 15% popusta, 10+ knjiga 20% popusta.";
 
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [announcementIndex, setAnnouncementIndex] = useState(0);
   const location = useLocation();
 
   useEffect(() => {
@@ -30,13 +26,6 @@ export function Header() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnnouncementIndex((prev) => (prev + 1) % announcements.length);
-    }, 6000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => setMobileOpen(false), [location]);
@@ -52,9 +41,7 @@ export function Header() {
     <>
       <div className="bg-ink text-paper/85">
         <div className="wrap flex min-h-9 items-center justify-center py-2">
-          <p key={announcementIndex} className="enter text-center font-sans text-[12px] leading-snug tracking-[0.02em]">
-            {announcements[announcementIndex]}
-          </p>
+          <p className="text-center font-sans text-[12px] leading-snug tracking-[0.02em]">{announcement}</p>
         </div>
       </div>
 

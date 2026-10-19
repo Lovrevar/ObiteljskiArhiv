@@ -354,6 +354,78 @@ export async function fetchCartStatus(cartId: string) {
   return data?.data?.cart;
 }
 
+// Prices as Shopify calculates them, including automatic (volume) discounts.
+const CART_COST_QUERY = `
+  query cartCost($id: ID!) {
+    cart(id: $id) {
+      cost { totalAmount { currencyCode } }
+      discountAllocations {
+        discountedAmount { amount }
+        ... on CartAutomaticDiscountAllocation { title }
+      }
+      lines(first: 100) {
+        edges {
+          node {
+            cost { subtotalAmount { amount } totalAmount { amount } }
+            discountAllocations {
+              discountedAmount { amount }
+              ... on CartAutomaticDiscountAllocation { title }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+interface MoneyAmount {
+  amount: string;
+}
+
+interface DiscountAllocation {
+  discountedAmount: MoneyAmount;
+  title?: string;
+}
+
+export interface CartCost {
+  /** merchandise before any discount */
+  full: number;
+  /** what the customer pays for merchandise (shipping is added at checkout) */
+  total: number;
+  discount: number;
+  currencyCode: string;
+  discountTitles: string[];
+}
+
+const toCents = (value: number) => Math.round(value * 100) / 100;
+
+export async function fetchCartCost(cartId: string): Promise<CartCost | null> {
+  const data = await storefrontApiRequest(CART_COST_QUERY, { id: cartId });
+  const cart = data?.data?.cart;
+  if (!cart) return null;
+
+  const lines: Array<{ cost: { subtotalAmount: MoneyAmount; totalAmount: MoneyAmount }; discountAllocations: DiscountAllocation[] }> =
+    cart.lines.edges.map((edge: { node: unknown }) => edge.node);
+  const cartAllocations: DiscountAllocation[] = cart.discountAllocations ?? [];
+
+  const full = lines.reduce((sum, line) => sum + parseFloat(line.cost.subtotalAmount.amount), 0);
+  const afterLineDiscounts = lines.reduce((sum, line) => sum + parseFloat(line.cost.totalAmount.amount), 0);
+  const cartLevelDiscount = cartAllocations.reduce((sum, allocation) => sum + parseFloat(allocation.discountedAmount.amount), 0);
+  const total = afterLineDiscounts - cartLevelDiscount;
+
+  const discountTitles = [...lines.flatMap((line) => line.discountAllocations), ...cartAllocations]
+    .map((allocation) => allocation.title)
+    .filter((title): title is string => Boolean(title));
+
+  return {
+    full: toCents(full),
+    total: toCents(total),
+    discount: toCents(Math.max(0, full - total)),
+    currencyCode: cart.cost?.totalAmount?.currencyCode ?? "EUR",
+    discountTitles: [...new Set(discountTitles)],
+  };
+}
+
 export const LEGACY_AUTO_APPLIED_DISCOUNT_CODES = [
   "OBITELJ3",
   "OBITELJ5",

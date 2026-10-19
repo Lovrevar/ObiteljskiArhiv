@@ -184,7 +184,7 @@ export default function ShopPage() {
       {/* Single books */}
       <section aria-labelledby="pojedinacne-heading" className="pb-24 lg:pb-32">
         <div className="wrap">
-          <div className="mb-10 flex items-baseline justify-between gap-6 border-b border-ink/70 pb-4">
+          <div className="flex items-baseline justify-between gap-6 border-b border-ink/70 pb-4">
             <h2 id="pojedinacne-heading" className="font-serif text-[26px] italic text-ink">
               Pojedinačne knjige
             </h2>
@@ -194,6 +194,10 @@ export default function ShopPage() {
               </p>
             )}
           </div>
+          <p className="mb-10 mt-4 max-w-2xl font-sans text-[14px] leading-relaxed text-ink-soft">
+            Količinski popust vrijedi i ovdje: kad u košarici imate ukupno 5 ili više knjiga, bilo kojeg izdanja,
+            automatski dobivate 15% popusta, a za 10 ili više knjiga 20%.
+          </p>
           <div className="grid gap-16 md:grid-cols-2 md:gap-10 lg:gap-14">
             {isLoading ? (
               <>

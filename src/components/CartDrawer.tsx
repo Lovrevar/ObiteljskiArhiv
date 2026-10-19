@@ -4,7 +4,8 @@ import { ArrowUpRight, Loader2, Minus, Plus, ShoppingBag } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCartStore } from "@/stores/cartStore";
 import { formatPrice, shopifyImageUrl } from "@/lib/format";
-import { formatCollectionQuantityLabel } from "@/lib/shopify";
+import { DISCOUNT_TIERS, formatCollectionQuantityLabel } from "@/lib/shopify";
+import { useCartCost } from "@/hooks/useCartCost";
 import { displayTitle } from "@/lib/book";
 
 export const CartDrawer = () => {
@@ -14,6 +15,16 @@ export const CartDrawer = () => {
   const totalPrice = items.reduce((sum, item) => sum + parseFloat(item.price.amount) * item.quantity, 0);
   const currency = items[0]?.price.currencyCode || "EUR";
   const busy = isLoading || isSyncing;
+
+  // Shopify's own figures, so volume discounts show before checkout; the local sum is the fallback.
+  const { data: cost, isFetching: costLoading } = useCartCost(isOpen);
+  const shownTotal = cost ? cost.total : totalPrice;
+  const hasDiscount = Boolean(cost && cost.discount > 0);
+
+  // single books count toward the volume discount; collection bundles are already discounted
+  const singleBooks = items.filter((item) => !item.bundleSize).reduce((sum, item) => sum + item.quantity, 0);
+  const nextTier = DISCOUNT_TIERS.find((tier) => tier.discount > 0 && singleBooks < tier.minQty);
+  const booksToNextTier = nextTier ? nextTier.minQty - singleBooks : 0;
 
   useEffect(() => {
     if (isOpen) syncCart();
@@ -148,10 +159,32 @@ export const CartDrawer = () => {
             </ul>
 
             <div className="border-t border-hairline bg-paper-deep/60 px-6 pb-7 pt-6 sm:px-8">
+              {hasDiscount && cost && (
+                <dl className="mb-4 space-y-1.5 border-b border-hairline pb-4 font-sans text-[14px]">
+                  <div className="flex justify-between text-ink-soft">
+                    <dt>Međuzbroj</dt>
+                    <dd className="num-lining">{formatPrice(cost.full, cost.currencyCode)}</dd>
+                  </div>
+                  <div className="flex justify-between text-burgundy">
+                    <dt>{cost.discountTitles[0] ?? "Količinski popust"}</dt>
+                    <dd className="num-lining">-{formatPrice(cost.discount, cost.currencyCode)}</dd>
+                  </div>
+                </dl>
+              )}
               <div className="flex items-baseline justify-between">
                 <span className="font-sans text-[14px] text-ink-soft">Ukupno</span>
-                <span className="num-lining font-serif text-[28px] leading-none text-ink">{formatPrice(totalPrice, currency)}</span>
+                <span
+                  className={`num-lining font-serif text-[28px] leading-none text-ink transition-opacity ${costLoading && !cost ? "opacity-50" : ""}`}
+                  aria-busy={costLoading}
+                >
+                  {formatPrice(shownTotal, cost?.currencyCode ?? currency)}
+                </span>
               </div>
+              {!hasDiscount && singleBooks > 0 && nextTier && booksToNextTier <= 2 && (
+                <p className="mt-2 font-sans text-[12px] text-burgundy">
+                  Dodajte još {formatCollectionQuantityLabel(booksToNextTier)} za {nextTier.discount}% popusta.
+                </p>
+              )}
               <p className="mt-2 font-sans text-[12px] text-ink-soft">Dostava se izračunava pri završetku kupnje.</p>
               <button
                 onClick={handleCheckout}

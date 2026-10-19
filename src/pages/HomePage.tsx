@@ -308,7 +308,7 @@ export default function HomePage() {
               <div className="lg:col-span-5">
                 <h3 className="font-serif text-[28px] leading-tight text-ink">Obiteljska kolekcija</h3>
                 <p className="mt-2 font-sans text-[14px] leading-relaxed text-ink-soft">
-                  Složite kolekciju za cijelu obitelj, popust je već uključen u cijenu paketa.
+                  Popust vrijedi za 5 ili više knjiga, bilo da ih dodajete pojedinačno ili složite kao kolekciju.
                 </p>
               </div>
               <dl className="flex gap-10 lg:col-span-4">
