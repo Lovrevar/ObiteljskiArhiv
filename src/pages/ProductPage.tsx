@@ -11,6 +11,8 @@ import { Stitch } from "@/components/Stitch";
 import { SEO, SITE_URL } from "@/components/SEO";
 import { COLLECTION_HANDLE, bookFacts, displayTitle, editionTone, familyMembers, splitEditionTitle } from "@/lib/book";
 import { formatPrice, shopifyImageSrcSet, shopifyImageUrl } from "@/lib/format";
+import { type LocalImage } from "@/lib/images";
+import { spotOf, type Spot } from "@/lib/zoom";
 import { DISCOUNT_TIERS, getDiscountForQuantity } from "@/lib/shopify";
 import { cn } from "@/lib/utils";
 
@@ -42,7 +44,7 @@ export default function ProductPage() {
   const { addBook, isBusy } = useAddBookToCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [enlarged, setEnlarged] = useState(false);
+  const [enlarged, setEnlarged] = useState<Spot | null>(null);
 
   if (isLoading) {
     return (
@@ -66,6 +68,16 @@ export default function ProductPage() {
   const variant = product.node.variants.edges[0]?.node;
   const images = product.node.images.edges;
   const activeImage = images[selectedImage]?.node ?? images[0]?.node;
+  // the gallery photo as the lightbox shows it, at Shopify's full resolution
+  const zoomImage: LocalImage | null = activeImage
+    ? {
+        src: shopifyImageUrl(activeImage.url, 1600),
+        srcSet: shopifyImageSrcSet(activeImage.url),
+        width: activeImage.width ?? 1600,
+        height: activeImage.height ?? 1280,
+        alt: activeImage.altText || product.node.title,
+      }
+    : null;
 
   const isCollection = product.node.handle === COLLECTION_HANDLE;
   const handleAddToCart = () => addBook(product, quantity);
@@ -132,10 +144,10 @@ export default function ProductPage() {
             {/* Gallery */}
             <div className="lg:col-span-7">
               <div className="overflow-hidden bg-paper-deep">
-                {activeImage && (
+                {activeImage && zoomImage && (
                   <button
                     type="button"
-                    onClick={() => setEnlarged(true)}
+                    onClick={(event) => setEnlarged(spotOf(event, zoomImage))}
                     aria-label="Povećaj fotografiju"
                     className="group relative block w-full cursor-zoom-in"
                   >
@@ -151,23 +163,12 @@ export default function ProductPage() {
                   </button>
                 )}
               </div>
-              {activeImage && (
-                <Lightbox
-                  image={
-                    enlarged
-                      ? {
-                          src: shopifyImageUrl(activeImage.url, 1600),
-                          srcSet: shopifyImageSrcSet(activeImage.url),
-                          width: activeImage.width ?? 1600,
-                          height: activeImage.height ?? 1280,
-                          alt: activeImage.altText || product.node.title,
-                        }
-                      : null
-                  }
-                  caption={displayTitle(product.node.title)}
-                  onClose={() => setEnlarged(false)}
-                />
-              )}
+              <Lightbox
+                image={enlarged ? zoomImage : null}
+                spot={enlarged ?? undefined}
+                caption={displayTitle(product.node.title)}
+                onClose={() => setEnlarged(null)}
+              />
               {images.length > 1 && (
                 <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto" role="group" aria-label="Fotografije proizvoda">
                   {images.map((img, i) => (
