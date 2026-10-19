@@ -4,7 +4,7 @@ import { Picture } from "@/components/Picture";
 import { Stitch } from "@/components/Stitch";
 import { chapters, type Chapter } from "@/lib/book";
 import { cn } from "@/lib/utils";
-import { spotOf, type Spot } from "@/lib/zoom";
+import { loadedCopy } from "@/lib/zoom";
 
 type PhotographedChapter = Chapter & { spread: NonNullable<Chapter["spread"]> };
 
@@ -21,7 +21,7 @@ export function ChapterViewer() {
   const [active, setActive] = useState(DEFAULT_TITLE);
   // keep every spread that has been opened mounted, so switching back is an instant cross-fade
   const [opened, setOpened] = useState<string[]>([DEFAULT_TITLE]);
-  const [enlarged, setEnlarged] = useState<{ chapter: PhotographedChapter; spot: Spot } | null>(null);
+  const [enlarged, setEnlarged] = useState<{ chapter: PhotographedChapter; placeholder?: string } | null>(null);
 
   const select = (title: string) => {
     setActive(title);
@@ -36,7 +36,7 @@ export function ChapterViewer() {
       <figure className="hidden lg:col-span-8 lg:block">
         <button
           type="button"
-          onClick={(event) => setEnlarged({ chapter: activeChapter, spot: spotOf(event, activeChapter.spread) })}
+          onClick={(event) => setEnlarged({ chapter: activeChapter, placeholder: loadedCopy(event, activeChapter.spread) })}
           aria-label={`Povećaj: ${activeChapter.title}`}
           className="group relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden bg-paper"
         >
@@ -68,7 +68,7 @@ export function ChapterViewer() {
             <li key={chapter.title} className="w-[84%] shrink-0 snap-center sm:w-[60%]">
               <button
                 type="button"
-                onClick={(event) => setEnlarged({ chapter, spot: spotOf(event, chapter.spread) })}
+                onClick={(event) => setEnlarged({ chapter, placeholder: loadedCopy(event, chapter.spread) })}
                 aria-label={`Povećaj: ${chapter.title}`}
                 className="group relative block w-full"
               >
@@ -147,7 +147,7 @@ export function ChapterViewer() {
 
       <Lightbox
         image={enlarged?.chapter.spread ?? null}
-        spot={enlarged?.spot}
+        placeholder={enlarged?.placeholder}
         label={enlarged ? chapterLabel(enlarged.chapter) : undefined}
         caption={enlarged?.chapter.title}
         onClose={() => setEnlarged(null)}

@@ -12,7 +12,7 @@ import { SEO, SITE_URL } from "@/components/SEO";
 import { COLLECTION_HANDLE, bookFacts, displayTitle, editionTone, familyMembers, splitEditionTitle } from "@/lib/book";
 import { formatPrice, shopifyImageSrcSet, shopifyImageUrl } from "@/lib/format";
 import { type LocalImage } from "@/lib/images";
-import { spotOf, type Spot } from "@/lib/zoom";
+import { loadedCopy } from "@/lib/zoom";
 import { DISCOUNT_TIERS, getDiscountForQuantity } from "@/lib/shopify";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +44,7 @@ export default function ProductPage() {
   const { addBook, isBusy } = useAddBookToCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [enlarged, setEnlarged] = useState<Spot | null>(null);
+  const [enlarged, setEnlarged] = useState<{ placeholder?: string } | null>(null);
 
   if (isLoading) {
     return (
@@ -147,7 +147,7 @@ export default function ProductPage() {
                 {activeImage && zoomImage && (
                   <button
                     type="button"
-                    onClick={(event) => setEnlarged(spotOf(event, zoomImage))}
+                    onClick={(event) => setEnlarged({ placeholder: loadedCopy(event, zoomImage) })}
                     aria-label="Povećaj fotografiju"
                     className="group relative block w-full cursor-zoom-in"
                   >
@@ -165,7 +165,7 @@ export default function ProductPage() {
               </div>
               <Lightbox
                 image={enlarged ? zoomImage : null}
-                spot={enlarged ?? undefined}
+                placeholder={enlarged?.placeholder}
                 caption={displayTitle(product.node.title)}
                 onClose={() => setEnlarged(null)}
               />

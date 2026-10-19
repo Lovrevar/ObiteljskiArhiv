@@ -4,12 +4,10 @@ import { X, ZoomIn, ZoomOut } from "lucide-react";
 import { Picture } from "@/components/Picture";
 import { type LocalImage } from "@/lib/images";
 import { cn } from "@/lib/utils";
-import { spotOf, type Spot } from "@/lib/zoom";
+import { loadedCopy } from "@/lib/zoom";
 
-/** Zoomed-in width: from about 1800px the printed questions read comfortably. */
-const MIN_ZOOM_WIDTH = 1800;
-/** Narrower than this, the whole photo is too small to read, so it opens zoomed in. */
-const READABLE_WIDTH = 900;
+/** Zoomed-in width on large screens; from about 1800px the printed questions read comfortably. */
+const ZOOM_WIDTH = 1800;
 
 /** Width of the whole photo fitted to the screen; mirrors the max-width and max-height classes on the picture. */
 function fittedWidth(image: LocalImage) {
@@ -17,11 +15,13 @@ function fittedWidth(image: LocalImage) {
   return Math.min(window.innerWidth - gutter, (window.innerHeight - 136) * (image.width / image.height));
 }
 
-const zoomWidthFor = (fitted: number) => Math.max(MIN_ZOOM_WIDTH, Math.round(fitted * 1.75));
+/** A natural step in: about three times the fitted photo on a phone, about 1800px wide on larger screens. */
+const zoomWidthFor = (fitted: number) => Math.round(Math.max(fitted * 1.75, Math.min(fitted * 3, ZOOM_WIDTH)));
 
 interface LightboxProps {
   image: LocalImage | null;
-  spot?: Spot;
+  /** the copy the page already shows, displayed underneath until the sharp one has loaded */
+  placeholder?: string;
   /** small sans label before the caption, e.g. "Poglavlje 4" */
   label?: string;
   caption?: string;
@@ -32,7 +32,7 @@ interface LightboxProps {
  * A photograph shown full screen, so the printed pages can actually be read.
  * Clicking the picture zooms in on that spot; drag (or swipe) to move around.
  */
-export function Lightbox({ image, spot, label, caption, onClose }: LightboxProps) {
+export function Lightbox({ image, placeholder, label, caption, onClose }: LightboxProps) {
   return (
     <DialogPrimitive.Root open={Boolean(image)} onOpenChange={(open) => !open && onClose()}>
       <DialogPrimitive.Portal>
@@ -41,22 +41,19 @@ export function Lightbox({ image, spot, label, caption, onClose }: LightboxProps
           aria-describedby={undefined}
           className="fixed inset-0 z-50 flex flex-col text-paper outline-none data-[state=open]:animate-in data-[state=open]:fade-in-0"
         >
-          {image && <LightboxView image={image} spot={spot} label={label} caption={caption} onClose={onClose} />}
+          {image && <LightboxView image={image} placeholder={placeholder} label={label} caption={caption} onClose={onClose} />}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
   );
 }
 
-/** Mounted afresh each time the lightbox opens, so it always starts from the spot that was tapped. */
-function LightboxView({ image, spot, label, caption, onClose }: LightboxProps & { image: LocalImage }) {
-  const [zoomWidth, setZoomWidth] = useState<number | null>(() => {
-    const fitted = fittedWidth(image);
-    return fitted < READABLE_WIDTH ? zoomWidthFor(fitted) : null;
-  });
+/** Mounted afresh each time the lightbox opens, so it always starts on the whole photo. */
+function LightboxView({ image, placeholder, label, caption, onClose }: LightboxProps & { image: LocalImage }) {
+  const [zoomWidth, setZoomWidth] = useState<number | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const picture = useRef<HTMLImageElement>(null);
-  const focus = useRef({ x: spot?.x ?? 0.5, y: spot?.y ?? 0.5 });
+  const focus = useRef({ x: 0.5, y: 0.5 });
   const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
   const dragged = useRef(false);
   const zoomed = zoomWidth !== null;
@@ -148,10 +145,9 @@ function LightboxView({ image, spot, label, caption, onClose }: LightboxProps & 
           alt={image.alt}
           draggable={false}
           onClick={onPictureClick}
-          // the copy already on the page shows underneath until the sharp one has loaded
           style={{
             width: zoomWidth ?? undefined,
-            backgroundImage: spot?.placeholder ? `url("${spot.placeholder}")` : undefined,
+            backgroundImage: placeholder ? `url("${placeholder}")` : undefined,
             backgroundSize: "100% 100%",
           }}
           className={cn(
@@ -213,13 +209,13 @@ interface ZoomablePictureProps extends ComponentProps<typeof Picture> {
 
 /** A photograph that opens full screen when clicked. */
 export function ZoomablePicture({ label, caption, ...picture }: ZoomablePictureProps) {
-  const [spot, setSpot] = useState<Spot | null>(null);
+  const [opened, setOpened] = useState<{ placeholder?: string } | null>(null);
 
   return (
     <>
       <button
         type="button"
-        onClick={(event) => setSpot(spotOf(event, picture.image))}
+        onClick={(event) => setOpened({ placeholder: loadedCopy(event, picture.image) })}
         aria-label={`Povećaj: ${caption ?? picture.alt ?? picture.image.alt}`}
         className="group relative block w-full cursor-zoom-in"
       >
@@ -227,11 +223,11 @@ export function ZoomablePicture({ label, caption, ...picture }: ZoomablePictureP
         <ZoomHint />
       </button>
       <Lightbox
-        image={spot ? picture.image : null}
-        spot={spot ?? undefined}
+        image={opened ? picture.image : null}
+        placeholder={opened?.placeholder}
         label={label}
         caption={caption}
-        onClose={() => setSpot(null)}
+        onClose={() => setOpened(null)}
       />
     </>
   );
