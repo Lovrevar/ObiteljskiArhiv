@@ -22,6 +22,6 @@ export function shopifyImageUrl(url: string, width: number) {
   }
 }
 
-export function shopifyImageSrcSet(url: string, widths: number[] = [480, 800, 1200, 1600]) {
+export function shopifyImageSrcSet(url: string, widths: number[] = [480, 800, 1200, 1600, 2400, 3200]) {
   return widths.map((width) => `${shopifyImageUrl(url, width)} ${width}w`).join(", ");
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Lightbox, ZoomHint } from "@/components/Lightbox";
 import { Picture } from "@/components/Picture";
 import { Stitch } from "@/components/Stitch";
 import { chapters, type Chapter } from "@/lib/book";
@@ -19,6 +20,7 @@ export function ChapterViewer() {
   const [active, setActive] = useState(DEFAULT_TITLE);
   // keep every spread that has been opened mounted, so switching back is an instant cross-fade
   const [opened, setOpened] = useState<string[]>([DEFAULT_TITLE]);
+  const [enlarged, setEnlarged] = useState<(typeof photographed)[number] | null>(null);
 
   const select = (title: string) => {
     setActive(title);
@@ -31,7 +33,12 @@ export function ChapterViewer() {
     <div className="lg:grid lg:grid-cols-12 lg:gap-12">
       {/* Desktop: one large spread that changes with the contents list */}
       <figure className="hidden lg:col-span-8 lg:block">
-        <div className="relative aspect-[4/3] overflow-hidden bg-paper">
+        <button
+          type="button"
+          onClick={() => setEnlarged(activeChapter)}
+          aria-label={`Povećaj: ${activeChapter.title}`}
+          className="group relative block aspect-[4/3] w-full cursor-zoom-in overflow-hidden bg-paper"
+        >
           {photographed
             .filter((chapter) => opened.includes(chapter.title))
             .map((chapter) => (
@@ -45,7 +52,8 @@ export function ChapterViewer() {
                 )}
               />
             ))}
-        </div>
+          <ZoomHint />
+        </button>
         <figcaption className="mt-4 flex items-baseline gap-3" aria-live="polite">
           <span className="font-sans text-[12px] text-ink-soft">{chapterLabel(activeChapter)}</span>
           <span className="caption text-[17px] text-ink">{activeChapter.title}</span>
@@ -57,7 +65,15 @@ export function ChapterViewer() {
         <ul className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 sm:px-8" aria-label="Fotografirana poglavlja">
           {photographed.map((chapter) => (
             <li key={chapter.title} className="w-[84%] shrink-0 snap-center sm:w-[60%]">
-              <Picture image={chapter.spread} sizes="84vw" className="aspect-[4/3] w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setEnlarged(chapter)}
+                aria-label={`Povećaj: ${chapter.title}`}
+                className="group relative block w-full"
+              >
+                <Picture image={chapter.spread} sizes="84vw" className="aspect-[4/3] w-full object-cover" />
+                <ZoomHint />
+              </button>
               <p className="mt-3 flex items-baseline gap-2">
                 <span className="font-sans text-[12px] text-ink-soft">{chapterLabel(chapter)}</span>
                 <span className="caption text-ink">{chapter.title}</span>
@@ -127,6 +143,13 @@ export function ChapterViewer() {
           Označena poglavlja možete otvoriti i pogledati stvarne stranice knjige.
         </p>
       </div>
+
+      <Lightbox
+        image={enlarged?.spread ?? null}
+        label={enlarged ? chapterLabel(enlarged) : undefined}
+        caption={enlarged?.title}
+        onClose={() => setEnlarged(null)}
+      />
     </div>
   );
 }

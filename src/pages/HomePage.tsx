@@ -4,6 +4,7 @@ import { FadeIn } from "@/components/FadeIn";
 import { SEO } from "@/components/SEO";
 import { HomeHero } from "@/components/HomeHero";
 import { Picture } from "@/components/Picture";
+import { ZoomablePicture } from "@/components/Lightbox";
 import { FigureCaption } from "@/components/FigureCaption";
 import { CoverWindow } from "@/components/CoverWindow";
 import { Stitch } from "@/components/Stitch";
@@ -104,9 +105,10 @@ export default function HomePage() {
           <div className="lg:col-span-6">
             <FadeIn>
               <figure>
-                <Picture
+                <ZoomablePicture
                   image={images.prvaStranica}
                   sizes="(min-width: 1024px) 50vw, 100vw"
+                  caption="Prva stranica bordo izdanja"
                   className="aspect-[25/18] w-full object-cover"
                 />
                 <figcaption className="caption mt-3">Prva stranica bordo izdanja</figcaption>

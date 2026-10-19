@@ -5,11 +5,12 @@ import { useProductByHandle } from "@/hooks/useProducts";
 import { useAddBookToCart } from "@/hooks/useAddBookToCart";
 import { FadeIn } from "@/components/FadeIn";
 import { ShopifyPicture } from "@/components/Picture";
+import { Lightbox, ZoomHint } from "@/components/Lightbox";
 import { CoverWindow } from "@/components/CoverWindow";
 import { Stitch } from "@/components/Stitch";
 import { SEO, SITE_URL } from "@/components/SEO";
 import { COLLECTION_HANDLE, bookFacts, displayTitle, editionTone, familyMembers, splitEditionTitle } from "@/lib/book";
-import { formatPrice, shopifyImageUrl } from "@/lib/format";
+import { formatPrice, shopifyImageSrcSet, shopifyImageUrl } from "@/lib/format";
 import { DISCOUNT_TIERS, getDiscountForQuantity } from "@/lib/shopify";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export default function ProductPage() {
   const { addBook, isBusy } = useAddBookToCart();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [enlarged, setEnlarged] = useState(false);
 
   if (isLoading) {
     return (
@@ -131,16 +133,41 @@ export default function ProductPage() {
             <div className="lg:col-span-7">
               <div className="overflow-hidden bg-paper-deep">
                 {activeImage && (
-                  <ShopifyPicture
-                    key={activeImage.url}
-                    url={activeImage.url}
-                    alt={activeImage.altText || product.node.title}
-                    priority
-                    sizes="(min-width: 1024px) 58vw, 100vw"
-                    className="enter-image aspect-[5/4] w-full object-cover"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setEnlarged(true)}
+                    aria-label="Povećaj fotografiju"
+                    className="group relative block w-full cursor-zoom-in"
+                  >
+                    <ShopifyPicture
+                      key={activeImage.url}
+                      url={activeImage.url}
+                      alt={activeImage.altText || product.node.title}
+                      priority
+                      sizes="(min-width: 1024px) 58vw, 100vw"
+                      className="enter-image aspect-[5/4] w-full object-cover"
+                    />
+                    <ZoomHint />
+                  </button>
                 )}
               </div>
+              {activeImage && (
+                <Lightbox
+                  image={
+                    enlarged
+                      ? {
+                          src: shopifyImageUrl(activeImage.url, 1600),
+                          srcSet: shopifyImageSrcSet(activeImage.url),
+                          width: activeImage.width ?? 1600,
+                          height: activeImage.height ?? 1280,
+                          alt: activeImage.altText || product.node.title,
+                        }
+                      : null
+                  }
+                  caption={displayTitle(product.node.title)}
+                  onClose={() => setEnlarged(false)}
+                />
+              )}
               {images.length > 1 && (
                 <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto" role="group" aria-label="Fotografije proizvoda">
                   {images.map((img, i) => (

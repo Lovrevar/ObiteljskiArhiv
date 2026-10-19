@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { FadeIn } from "@/components/FadeIn";
 import { SEO } from "@/components/SEO";
 import { PageIntro } from "@/components/PageIntro";
-import { Picture } from "@/components/Picture";
+import { ZoomablePicture } from "@/components/Lightbox";
 import { FigureCaption } from "@/components/FigureCaption";
 import { images, type LocalImage } from "@/lib/images";
 
@@ -90,7 +90,13 @@ export default function HowItWorksPage() {
                   </div>
                   {step.image && (
                     <figure className={i % 2 === 0 ? "lg:col-span-5 lg:col-start-8" : "lg:col-span-4 lg:col-start-9"}>
-                      <Picture image={step.image} sizes="(min-width: 1024px) 40vw, 100vw" className="aspect-[4/3] w-full object-cover" />
+                      <ZoomablePicture
+                        image={step.image}
+                        sizes="(min-width: 1024px) 40vw, 100vw"
+                        label={step.label}
+                        caption={step.caption}
+                        className="aspect-[4/3] w-full object-cover"
+                      />
                       {step.caption && <FigureCaption label={step.label}>{step.caption}</FigureCaption>}
                     </figure>
                   )}

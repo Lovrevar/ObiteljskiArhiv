@@ -29,6 +29,8 @@ export interface ShopifyProduct {
         node: {
           url: string;
           altText: string | null;
+          width: number | null;
+          height: number | null;
         };
       }>;
     };
@@ -106,6 +108,8 @@ export const PRODUCTS_QUERY = `
               node {
                 url
                 altText
+                width
+                height
               }
             }
           }
@@ -154,6 +158,8 @@ export const PRODUCT_BY_HANDLE_QUERY = `
           node {
             url
             altText
+            width
+            height
           }
         }
       }
