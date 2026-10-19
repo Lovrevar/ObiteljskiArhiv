@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /policies
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+Sitemap: https://obiteljski-arhiv.com/sitemap.xml
