@@ -33,7 +33,7 @@ export const bookFacts = [
   {
     term: "Stranice za fotografije",
     detail:
-      "Na kraju knjige, sa samoljepljivim kutićima za fotografije formata 10×15 cm. Uz svaku sliku možete napisati kratki opis.",
+      "Na kraju knjige, za fotografije formata 10×15 cm. Uz svaku sliku možete napisati kratki opis.",
   },
   {
     term: "Personalizacija na koricama",

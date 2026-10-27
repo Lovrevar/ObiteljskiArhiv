@@ -335,10 +335,10 @@ export default function ProductPage() {
                 </div>
               ))}
               <div className="grid gap-1 border-b border-hairline py-5 sm:grid-cols-[12rem_1fr] sm:gap-6">
-                <dt className="font-serif text-[19px] leading-snug text-ink">Samoljepljivi kutići</dt>
+                <dt className="font-serif text-[19px] leading-snug text-ink">Preporuka: samoljepljivi kutići</dt>
                 <dd className="font-sans text-[14px] leading-relaxed text-ink-soft">
-                  S njima ljepite fotografije na papir. Odabrali smo kutiće jer od ljepila ostaju tragovi, a folija
-                  požuti s vremenom te daje na debljini knjige.
+                  Za lijepljenje fotografija preporučujemo samoljepljive kutiće, no oni nisu uključeni u knjigu. Od
+                  ljepila ostaju tragovi, a folija s vremenom požuti i daje na debljini knjige.
                 </dd>
               </div>
             </dl>
